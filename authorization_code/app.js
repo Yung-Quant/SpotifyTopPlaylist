@@ -36,7 +36,10 @@ app.get('/login', function(req, res) {
   res.cookie(stateKey, state);
 
   // your application requests authorization
-  var scope = 'user-read-private user-read-email user-library-read user-follow-read user-read-recently-played user-read-currently-playing user-top-read';
+  var scope = 'user-read-private user-read-email user-library-read' + 
+  ' user-follow-read user-read-recently-played user-read-currently-playing' + 
+  ' user-top-read playlist-modify-public playlist-read-private playlist-modify-private';
+
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
@@ -82,16 +85,8 @@ app.get('/callback', function(req, res) {
         var access_token = body.access_token,
             refresh_token = body.refresh_token;
 
-        var sys = require('sys'),
-            exec = require('child_process').exec;
-        console.log('before exec');
+        var exec = require('child_process').exec;
 
-
-
-
-
-
-        
         var spotifyApi = new SpotifyWebApi({
           clientId : 'fcecfc72172e4cd267473117a17cbd4d',
           clientSecret : 'a6338157c9bb5ac9c71924cb2940e1a7',
@@ -99,36 +94,46 @@ app.get('/callback', function(req, res) {
         });
         
         spotifyApi.setAccessToken(access_token);
-        var options = {time_range: 'medium_term', limit : 30}
-        
+/**        
         spotifyApi.getMyTopArtists(options)
         .then(function(data) {
             console.log('artists:\n');
             for(i = 0; i < data.body.items.length; i++){
-                console.log(data.body.items[i].name);
+                console.log(i + data.body.items[i].uri);
             }
-            res.getElementById('artists').appendChild(makeUL(data.body.items));
         
         }, function(err){
             console.log('Something went wrong!', err)
         });
-        
-        spotifyApi.getMyTopTracks(options)
+**/   
+
+        spotifyApi.getMe()
+        .then(function(data) {
+          return data.body.id;
+        })
+        .then(function(id) {
+          return spotifyApi.createPlaylist(id, 'Top Tracks This Week', {'public': true});
+        })
         .then(function(data){
-            console.log('\ntracks:\n');
-            for(i = 0; i < data.body.items.length; i++){
-                console.log(data.body.items[i].name);
-            }
-            res.getElementById('trax').appendChild(makeUL(data.body.items));
-
-        }, function(err){
-            console.log('Something went wrong!', err);
+          console.log(data.body.id);
+          var options = {time_range: 'medium_term', limit : 30};
+          return spotifyApi.getMyTopTracks(options);
+        })
+        .then(function(data){
+          var songs = [];
+          //console.log('\ntracks:\n');
+          for(i = 0; i < data.body.items.length; i++){
+            //console.log(i + " " + data.body.items[i].uri.replace("spotify:track:", ""));
+            songs.push(data.body.items[i].uri);
+          }
+          return Promise.all(songs);
+        })
+        .then(function(songs){
+          console.log(songs.toString());
+        })
+        .catch(function () {
+          console.log("Promise Rejected");
         });
-
-        
-
-
-
 
         var options = {
           url: 'https://api.spotify.com/v1/me',
@@ -137,9 +142,9 @@ app.get('/callback', function(req, res) {
         };
 
         // use the access token to access the Spotify Web API
-        request.get(options, function(error, response, body) {
-          console.log(body);
-        });
+        // request.get(options, function(error, response, body) {
+        //   console.log(body);
+        // });
 
         // we can also pass the token to the browser to make requests from there
         res.redirect('/#' +
