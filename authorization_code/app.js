@@ -135,6 +135,9 @@ app.get('/callback', function(req, res) {
         .then(function(songs){
           return spotifyApi.addTracksToPlaylist(results.me, results.playlistId, songs);
         })
+        .then(function(data){
+          process.exit(0);
+        })
         .catch(function () {
           console.log("Promise Rejected");
         });
@@ -188,25 +191,6 @@ app.get('/refresh_token', function(req, res) {
     }
   });
 });
-
-function makeUL(array) {
-  // Create the list element:
-  var list = document.createElement('ul');
-
-  for(var i = 0; i < array.length; i++) {
-      // Create the list item:
-      var item = document.createElement('li');
-
-      // Set its contents:
-      item.appendChild(document.createTextNode(array[i]));
-
-      // Add it to the list:
-      list.appendChild(item);
-  }
-
-  // Finally, return the constructed list:
-  return list;
-}
 
 console.log('Listening on 8888');
 app.listen(8888);
