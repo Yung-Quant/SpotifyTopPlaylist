@@ -1,3 +1,7 @@
-# Listening Habits
+# Playlist Of Top Songs This Month From Spotify
 
-Simple node app to understand Authentication flow and analyze top artists
+A spotify app that generates a playlist composed of the user's most listened to tracks in a month.
+
+# Usage:
+
+run `node authorization_code/app.js` and navigate to `http://localhost:8888/`
