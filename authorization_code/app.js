@@ -107,29 +107,33 @@ app.get('/callback', function(req, res) {
         });
 **/   
 
+        var results = {};
+
         spotifyApi.getMe()
         .then(function(data) {
           return data.body.id;
         })
         .then(function(id) {
-          return spotifyApi.createPlaylist(id, 'Top Tracks This Week', {'public': true});
+          results.me = id;
+          return spotifyApi.createPlaylist(id, 'Top Tracks This Month', {'public': true});
         })
         .then(function(data){
-          console.log(data.body.id);
-          var options = {time_range: 'medium_term', limit : 30};
+          results.playlistId = data.body.id;
+          var options = {time_range: 'short_term', limit : 30};
           return spotifyApi.getMyTopTracks(options);
+          
         })
         .then(function(data){
           var songs = [];
           //console.log('\ntracks:\n');
-          for(i = 0; i < data.body.items.length; i++){
-            //console.log(i + " " + data.body.items[i].uri.replace("spotify:track:", ""));
-            songs.push(data.body.items[i].uri);
-          }
+           for(i = 0; i < data.body.items.length; i++){
+             //console.log(i + " " + data.body.items[i].uri.replace("spotify:track:", ""));
+             songs.push(data.body.items[i].uri);
+           }
           return Promise.all(songs);
         })
         .then(function(songs){
-          console.log(songs.toString());
+          return spotifyApi.addTracksToPlaylist(results.me, results.playlistId, songs);
         })
         .catch(function () {
           console.log("Promise Rejected");
